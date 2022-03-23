@@ -1,4 +1,4 @@
-module go-ethereum
+module chrakimnast6/go-ethereum
 
 go 1.17
 
