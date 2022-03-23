@@ -120,8 +120,20 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	name, err := instance.Name(&bind.CallOpts{})
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	_ = instance
+	symbol, err := instance.Symbol(&bind.CallOpts{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	supply, err := instance.TotalSupply(&bind.CallOpts{})
+
+	fmt.Printf("name: %s\n", name)
+	fmt.Printf("symbol: %s\n", symbol)
+	fmt.Printf("supply: %s\n", supply)
 
 	// Mint token to the address
 	// Loading the contract
