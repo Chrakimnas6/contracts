@@ -10,7 +10,6 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"golang.org/x/crypto/sha3"
@@ -55,20 +54,21 @@ func TransferToken(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address,
 	privateKeyTo *ecdsa.PrivateKey, addressTo common.Address,
 	tokenAddress common.Address, value *big.Int, instance *token.Token, client *ethclient.Client) (err error) {
 
+	// ERC-20 specification
 	transferFnSignature := []byte("transfer(address,uint256)")
+	// Generate the Keccak256 hash of the function signature
 	hash := sha3.NewLegacyKeccak256()
 	hash.Write(transferFnSignature)
 	methodID := hash.Sum(nil)[:4]
-	fmt.Println(hexutil.Encode(methodID))
 
+	// Left pad 32 bytes the address we'are sending tokens to
 	paddedAddress := common.LeftPadBytes(addressTo.Bytes(), 32)
-	fmt.Println(hexutil.Encode(paddedAddress))
 
 	amount := new(big.Int)
 	amount.SetString("1000000000000000000000", 10) // 1000 tokens
 
+	// Also left padding 32 bits for the amount
 	paddedAmount := common.LeftPadBytes(amount.Bytes(), 32)
-	fmt.Println(hexutil.Encode(paddedAmount)) // 0x00000000000000000000000000000000000000000000003635c9adc5dea00000
 
 	var data []byte
 	data = append(data, methodID...)
@@ -82,8 +82,8 @@ func TransferToken(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address,
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(gasLimit)
+	// Not enough
+	_ = gasLimit
 
 	nonce, err := client.PendingNonceAt(context.Background(), addressFrom)
 	if err != nil {
@@ -99,9 +99,10 @@ func TransferToken(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address,
 	if nil != err {
 		return err
 	}
-
+	// Gas limit is not enough with the estimated one, so set to 300000 here for now
 	tx := types.NewTransaction(nonce, tokenAddress, value, 300000, gasPrice, data)
 
+	// Sign the transaction with the private key of the sender
 	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privateKeyFrom)
 	if err != nil {
 		return err
@@ -112,11 +113,11 @@ func TransferToken(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address,
 		return err
 	}
 
-	balanceNew, err := instance.BalanceOf(&bind.CallOpts{}, addressTo)
+	balanceB, err := instance.BalanceOf(&bind.CallOpts{}, addressTo)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Balance is %s\n", balanceNew)
+	fmt.Printf("B's Balance is %s\n", new(big.Int).Div(balanceB, big.NewInt(1000000000000000000)))
 
 	return nil
 }

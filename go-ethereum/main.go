@@ -30,12 +30,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("ETH balance of the local node: %s\n", balance)
+	fmt.Printf("ETH balance of the Hardhat's local node: %s\n", balance)
 
 	// Generate new account A
 	privateKey, address := accounts.GenerateNewAccount()
 
-	// Transferring ETH to the address
+	// Transferring ETH to A's address
 	value := big.NewInt(1000000000000000000)
 	err = transfers.TransferETH(privateKeyHardhat, addressHardhat, privateKey, address, value, client)
 	if err != nil {
@@ -63,14 +63,20 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("name: %s\n", name)
-	fmt.Printf("symbol: %s\n", symbol)
-	fmt.Printf("supply: %s\n", supply)
+	balanceA, err := instance.BalanceOf(&bind.CallOpts{}, address)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Token's name: %s\n", name)
+	fmt.Printf("Token's symbol: %s\n", symbol)
+	fmt.Printf("Token's supply: %s\n", supply)
+
+	fmt.Printf("A's Balance is: %s\n", new(big.Int).Div(balanceA, big.NewInt(1000000000000000000)))
 
 	// Create another address
 	// Generate new account B
 	privateKeyTo, addressTo := accounts.GenerateNewAccount()
-	_ = privateKeyTo
 
 	// Transfer MTK token
 	value = big.NewInt(0)
@@ -78,4 +84,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	balanceAAfter, err := instance.BalanceOf(&bind.CallOpts{}, address)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("A's Balance after the transaction is: %s\n", new(big.Int).Div(balanceAAfter, big.NewInt(1000000000000000000)))
 }
