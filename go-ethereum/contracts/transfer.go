@@ -14,9 +14,41 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
+func MintUsingAPI(privateKey *ecdsa.PrivateKey, address common.Address,
+	value *big.Int, instance *Token, client *ethclient.Client) (err error) {
+
+	nonce, err := client.PendingNonceAt(context.Background(), address)
+	if err != nil {
+		return err
+	}
+	chainID, err := client.NetworkID(context.Background())
+	if err != nil {
+		return err
+	}
+	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, chainID)
+	if err != nil {
+		return err
+	}
+
+	gasPrice, err := client.SuggestGasPrice(context.Background())
+	if err != nil {
+		return err
+	}
+	auth.Nonce = big.NewInt(int64(nonce))
+	auth.Value = big.NewInt(0)      // in wei
+	auth.GasLimit = uint64(3000000) // in units
+	auth.GasPrice = gasPrice
+
+	tx, err := instance.Mint(auth, address, value)
+	if err != nil {
+		return err
+	}
+	_ = tx
+	return nil
+}
+
 func TransferETH(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address,
-	privateKeyTo *ecdsa.PrivateKey, addressTo common.Address,
-	value *big.Int, client *ethclient.Client) (err error) {
+	addressTo common.Address, value *big.Int, client *ethclient.Client) (err error) {
 
 	nonce, err := client.PendingNonceAt(context.Background(), addressFrom)
 	if err != nil {
@@ -49,8 +81,7 @@ func TransferETH(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address,
 	return nil
 }
 
-func Transfer(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address,
-	privateKeyTo *ecdsa.PrivateKey, addressTo common.Address,
+func Transfer(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address, addressTo common.Address,
 	tokenAddress common.Address, value *big.Int, instance *Token, client *ethclient.Client) (err error) {
 
 	// ERC-20 specification
@@ -63,16 +94,13 @@ func Transfer(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address,
 	// Left pad 32 bytes the address we'are sending tokens to
 	paddedAddress := common.LeftPadBytes(addressTo.Bytes(), 32)
 
-	amount := new(big.Int)
-	amount.SetString("1000000000000000000000", 10) // 1000 tokens
-
 	// Also left padding 32 bits for the amount
-	paddedAmount := common.LeftPadBytes(amount.Bytes(), 32)
+	paddedValue := common.LeftPadBytes(value.Bytes(), 32)
 
 	var data []byte
 	data = append(data, methodID...)
 	data = append(data, paddedAddress...)
-	data = append(data, paddedAmount...)
+	data = append(data, paddedValue...)
 
 	gasLimit, err := client.EstimateGas(context.Background(), ethereum.CallMsg{
 		To:   &addressTo,
@@ -99,7 +127,7 @@ func Transfer(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address,
 		return err
 	}
 	// Gas limit is not enough with the estimated one, so set to 300000 here for now
-	tx := types.NewTransaction(nonce, tokenAddress, value, 300000, gasPrice, data)
+	tx := types.NewTransaction(nonce, tokenAddress, big.NewInt(0), 300000, gasPrice, data)
 
 	// Sign the transaction with the private key of the sender
 	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privateKeyFrom)
@@ -118,5 +146,37 @@ func Transfer(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address,
 	}
 	fmt.Printf("B's Balance is %s\n", new(big.Int).Div(balanceB, big.NewInt(1000000000000000000)))
 
+	return nil
+}
+
+func TransferUsingAPI(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address, addressTo common.Address,
+	value *big.Int, instance *Token, client *ethclient.Client) (err error) {
+	nonce, err := client.PendingNonceAt(context.Background(), addressFrom)
+	if err != nil {
+		return err
+	}
+	chainID, err := client.NetworkID(context.Background())
+	if err != nil {
+		return err
+	}
+	auth, err := bind.NewKeyedTransactorWithChainID(privateKeyFrom, chainID)
+	if err != nil {
+		return err
+	}
+
+	gasPrice, err := client.SuggestGasPrice(context.Background())
+	if err != nil {
+		return err
+	}
+	auth.Nonce = big.NewInt(int64(nonce))
+	auth.Value = big.NewInt(0)      // in wei
+	auth.GasLimit = uint64(3000000) // in units
+	auth.GasPrice = gasPrice
+
+	tx, err := instance.Transfer(auth, addressTo, value)
+	if err != nil {
+		return err
+	}
+	_ = tx
 	return nil
 }

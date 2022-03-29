@@ -35,51 +35,47 @@ func main() {
 	privateKey, address := accounts.New()
 
 	// Transferring ETH to A's address
-	value := big.NewInt(1000000000000000000)
-	err = token.TransferETH(privateKeyHardhat, addressHardhat, privateKey, address, value, client)
+	value := big.NewInt(1000000000000000000) // 1 eth
+	err = token.TransferETH(privateKeyHardhat, addressHardhat, address, value, client)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Deploy the smart contract
 	tokenAddress, instance := token.Deploy(address, privateKey, client)
+	_ = tokenAddress
 
 	// Check information are correct
-	if err != nil {
-		log.Fatal(err)
-	}
-	name, err := instance.Name(&bind.CallOpts{})
+	token.CheckInformation(instance, address)
+
+	// Mint tokens to A's address
+	value = new(big.Int)
+	value.SetString("10000000000000000000000", 10) // 10000 tokens
+	err = token.MintUsingAPI(privateKey, address, value, instance, client)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	symbol, err := instance.Symbol(&bind.CallOpts{})
-	if err != nil {
-		log.Fatal(err)
-	}
-	supply, err := instance.TotalSupply(&bind.CallOpts{})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	balanceA, err := instance.BalanceOf(&bind.CallOpts{}, address)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("Token's name: %s\n", name)
-	fmt.Printf("Token's symbol: %s\n", symbol)
-	fmt.Printf("Token's supply: %s\n", supply)
-
-	fmt.Printf("A's Balance is: %s\n", new(big.Int).Div(balanceA, big.NewInt(1000000000000000000)))
+	// Check information are correct
+	token.CheckInformation(instance, address)
 
 	// Create another address
 	// Generate new account B
 	privateKeyTo, addressTo := accounts.New()
+	_ = privateKeyTo
 
 	// Transfer MTK token
-	value = big.NewInt(0)
-	err = token.Transfer(privateKey, address, privateKeyTo, addressTo, tokenAddress, value, instance, client)
+	value = new(big.Int)
+	value.SetString("1000000000000000000000", 10) // 1000 tokens
+
+	// Transfering using API
+	// err = token.TransferUsingAPI(privateKey, address, addressTo, value, instance, client)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// Normal transfer
+	err = token.Transfer(privateKey, address, addressTo, tokenAddress, value, instance, client)
 	if err != nil {
 		log.Fatal(err)
 	}
