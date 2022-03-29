@@ -1,7 +1,6 @@
-package transfers
+package token
 
 import (
-	token "chrakimnas6/go-ethereum/contracts"
 	"context"
 	"crypto/ecdsa"
 	"fmt"
@@ -36,7 +35,7 @@ func TransferETH(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address,
 	if err != nil {
 		return err
 	}
-
+	//
 	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privateKeyFrom)
 	if err != nil {
 		return err
@@ -50,9 +49,9 @@ func TransferETH(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address,
 	return nil
 }
 
-func TransferToken(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address,
+func Transfer(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address,
 	privateKeyTo *ecdsa.PrivateKey, addressTo common.Address,
-	tokenAddress common.Address, value *big.Int, instance *token.Token, client *ethclient.Client) (err error) {
+	tokenAddress common.Address, value *big.Int, instance *Token, client *ethclient.Client) (err error) {
 
 	// ERC-20 specification
 	transferFnSignature := []byte("transfer(address,uint256)")

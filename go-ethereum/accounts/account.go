@@ -19,7 +19,9 @@ func GetHardhatAddress() (privateKey *ecdsa.PrivateKey, address common.Address) 
 }
 
 // Generate new account
-func GenerateNewAccount() (privateKey *ecdsa.PrivateKey, address common.Address) {
+
+// NewAccount or New becasue the package's name is accounts
+func New() (privateKey *ecdsa.PrivateKey, address common.Address) {
 	privateKey, err := crypto.GenerateKey()
 	if err != nil {
 		log.Fatal(err)

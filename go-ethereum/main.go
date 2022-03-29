@@ -3,7 +3,6 @@ package main
 import (
 	"chrakimnas6/go-ethereum/accounts"
 	token "chrakimnas6/go-ethereum/contracts"
-	"chrakimnas6/go-ethereum/transfers"
 	"context"
 	"fmt"
 	"log"
@@ -33,17 +32,17 @@ func main() {
 	fmt.Printf("ETH balance of the Hardhat's local node: %s\n", balance)
 
 	// Generate new account A
-	privateKey, address := accounts.GenerateNewAccount()
+	privateKey, address := accounts.New()
 
 	// Transferring ETH to A's address
 	value := big.NewInt(1000000000000000000)
-	err = transfers.TransferETH(privateKeyHardhat, addressHardhat, privateKey, address, value, client)
+	err = token.TransferETH(privateKeyHardhat, addressHardhat, privateKey, address, value, client)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Deploy the smart contract
-	tokenAddress, instance := token.DeploySmartContract(address, privateKey, client)
+	tokenAddress, instance := token.Deploy(address, privateKey, client)
 
 	// Check information are correct
 	if err != nil {
@@ -76,11 +75,11 @@ func main() {
 
 	// Create another address
 	// Generate new account B
-	privateKeyTo, addressTo := accounts.GenerateNewAccount()
+	privateKeyTo, addressTo := accounts.New()
 
 	// Transfer MTK token
 	value = big.NewInt(0)
-	err = transfers.TransferToken(privateKey, address, privateKeyTo, addressTo, tokenAddress, value, instance, client)
+	err = token.Transfer(privateKey, address, privateKeyTo, addressTo, tokenAddress, value, instance, client)
 	if err != nil {
 		log.Fatal(err)
 	}

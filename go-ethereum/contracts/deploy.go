@@ -12,7 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-func DeploySmartContract(address common.Address, privateKey *ecdsa.PrivateKey, client *ethclient.Client) (tokenAdress common.Address, instance *Token) {
+func Deploy(address common.Address, privateKey *ecdsa.PrivateKey, client *ethclient.Client) (tokenAdress common.Address, instance *Token) {
 	nonce, err := client.PendingNonceAt(context.Background(), address)
 	if err != nil {
 		log.Fatal(err)
