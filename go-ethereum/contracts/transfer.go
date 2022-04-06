@@ -81,7 +81,7 @@ func TransferETH(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address,
 	return nil
 }
 
-func Transfer(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address, addressTo common.Address,
+func Transfer(privateKey *ecdsa.PrivateKey, addressFrom common.Address, addressTo common.Address,
 	tokenAddress common.Address, value *big.Int, instance *Token, client *ethclient.Client) (err error) {
 
 	// ERC-20 specification
@@ -130,7 +130,7 @@ func Transfer(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address, addr
 	tx := types.NewTransaction(nonce, tokenAddress, big.NewInt(0), 300000, gasPrice, data)
 
 	// Sign the transaction with the private key of the sender
-	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privateKeyFrom)
+	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privateKey)
 	if err != nil {
 		return err
 	}
@@ -144,12 +144,13 @@ func Transfer(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address, addr
 	if err != nil {
 		return err
 	}
+
 	fmt.Printf("B's Balance is %s\n", new(big.Int).Div(balanceB, big.NewInt(1000000000000000000)))
 
 	return nil
 }
 
-func TransferUsingAPI(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Address, addressTo common.Address,
+func TransferUsingAPI(privateKey *ecdsa.PrivateKey, addressFrom common.Address, addressTo common.Address,
 	value *big.Int, instance *Token, client *ethclient.Client) (err error) {
 	nonce, err := client.PendingNonceAt(context.Background(), addressFrom)
 	if err != nil {
@@ -159,7 +160,7 @@ func TransferUsingAPI(privateKeyFrom *ecdsa.PrivateKey, addressFrom common.Addre
 	if err != nil {
 		return err
 	}
-	auth, err := bind.NewKeyedTransactorWithChainID(privateKeyFrom, chainID)
+	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, chainID)
 	if err != nil {
 		return err
 	}

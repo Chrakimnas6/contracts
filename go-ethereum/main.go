@@ -48,7 +48,7 @@ func main() {
 	// Check information are correct
 	token.CheckInformation(instance, address)
 
-	// Mint tokens to A's address
+	// Mint extra 10000 tokens to A's address so he will have 20000 tokens in total
 	value = new(big.Int)
 	value.SetString("10000000000000000000000", 10) // 10000 tokens
 	err = token.MintUsingAPI(privateKey, address, value, instance, client)
@@ -58,6 +58,9 @@ func main() {
 
 	// Check information are correct
 	token.CheckInformation(instance, address)
+
+	// // Check information are correct
+	// token.CheckInformation(instance, address)
 
 	// Create another address
 	// Generate new account B
